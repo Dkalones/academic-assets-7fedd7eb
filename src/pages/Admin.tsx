@@ -13,6 +13,7 @@ import {
   GITHUB_CONFIG, listMaterials, uploadMaterial, deleteMaterial,
   fetchAvisos, saveAvisos, verifyToken, type MaterialItem, type Aviso,
 } from "@/lib/github";
+import { TemaEditor } from "@/components/TemaEditor";
 import { toast } from "sonner";
 
 const Admin = () => {
@@ -311,6 +312,8 @@ const Admin = () => {
             )}
           </div>
         </Card>
+
+        <TemaEditor token={token} tokenOk={tokenOk} />
       </main>
     </div>
   );
