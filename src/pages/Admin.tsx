@@ -312,6 +312,8 @@ const Admin = () => {
             )}
           </div>
         </Card>
+
+        <TemaEditor token={token} tokenOk={tokenOk} />
       </main>
     </div>
   );
