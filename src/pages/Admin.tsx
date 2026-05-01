@@ -44,7 +44,7 @@ const Admin = () => {
     e.preventDefault();
     if (authStore.login(password)) {
       setLogged(true);
-      setPassword("12345678");
+      setPassword("");
       toast.success("Login realizado");
     } else {
       toast.error("Senha incorreta");
