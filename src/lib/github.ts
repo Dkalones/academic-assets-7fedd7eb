@@ -7,6 +7,7 @@ export const GITHUB_CONFIG = {
   branch: "main",
   materialsPath: "materiais",
   avisosPath: "data/avisos.json",
+  temaPath: "data/tema.json",
 };
 
 const API = "https://api.github.com";
