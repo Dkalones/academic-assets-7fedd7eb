@@ -161,3 +161,52 @@ export async function verifyToken(token: string): Promise<boolean> {
   const res = await fetch(`${API}/repos/${owner}/${repo}`, { headers: authHeaders(token) });
   return res.ok;
 }
+
+export interface Tema {
+  primary: string;   // HSL: "220 60% 28%"
+  accent: string;    // HSL: "35 75% 55%"
+  background: string; // CSS válido: "#fcfbf8" | "linear-gradient(...)" | "url(...) center/cover"
+}
+
+export const TEMA_PADRAO: Tema = {
+  primary: "220 60% 28%",
+  accent: "35 75% 55%",
+  background: "hsl(40 33% 98%)",
+};
+
+export async function fetchTema(): Promise<{ tema: Tema; sha: string | null }> {
+  const { owner, repo, branch, temaPath } = GITHUB_CONFIG;
+  const url = `${API}/repos/${owner}/${repo}/contents/${temaPath}?ref=${branch}`;
+  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+  if (res.status === 404) return { tema: TEMA_PADRAO, sha: null };
+  if (!res.ok) return { tema: TEMA_PADRAO, sha: null };
+  const data = await res.json();
+  try {
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+    const parsed = JSON.parse(decoded);
+    return { tema: { ...TEMA_PADRAO, ...parsed }, sha: data.sha };
+  } catch {
+    return { tema: TEMA_PADRAO, sha: data.sha };
+  }
+}
+
+export async function saveTema(token: string, tema: Tema, sha: string | null): Promise<string> {
+  const { owner, repo, branch, temaPath } = GITHUB_CONFIG;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(tema, null, 2))));
+  const res = await fetch(`${API}/repos/${owner}/${repo}/contents/${temaPath}`, {
+    method: "PUT",
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: "Atualiza tema do site",
+      content,
+      branch,
+      sha: sha ?? undefined,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Falha ao salvar tema (${res.status})`);
+  }
+  const data = await res.json();
+  return data.content.sha;
+}
