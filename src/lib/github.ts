@@ -2,8 +2,8 @@
 // Configure o owner/repo/branch abaixo conforme o repositório que hospeda o site no GitHub Pages.
 
 export const GITHUB_CONFIG = {
-  owner: "SEU_USUARIO_GITHUB",
-  repo: "SEU_REPOSITORIO",
+  owner: "dkalones",
+  repo: "academic-assets-7fedd7eb",
   branch: "main",
   materialsPath: "materiais",
   avisosPath: "data/avisos.json",
