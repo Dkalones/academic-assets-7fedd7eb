@@ -37,17 +37,23 @@ export function applyTema(tema: Tema) {
     root.style.setProperty("--accent", a);
     root.style.setProperty("--ring", p || a);
   }
-  // Recalcula gradiente do hero para acompanhar o primary
   if (p) {
     root.style.setProperty(
       "--gradient-hero",
       `linear-gradient(135deg, hsl(${p}) 0%, hsl(${a || p}) 100%)`
     );
   }
-  // Background do site
-  document.body.style.background = tema.background || "";
-  document.body.style.backgroundAttachment = tema.background?.includes("url(") ? "fixed" : "";
-  document.body.style.backgroundSize = tema.background?.includes("url(") ? "cover" : "";
+  // Aplica o background tanto no html quanto no body para garantir cobertura total.
+  // Wrappers de página usam bg-transparent (ver Index/Admin) para deixar o fundo aparecer.
+  const bg = tema.background || "";
+  const isImage = bg.includes("url(");
+  for (const el of [root, document.body]) {
+    el.style.background = bg;
+    el.style.backgroundAttachment = isImage ? "fixed" : "";
+    el.style.backgroundSize = isImage ? "cover" : "";
+    el.style.backgroundRepeat = isImage ? "no-repeat" : "";
+    el.style.backgroundPosition = isImage ? "center" : "";
+  }
 }
 
 export function useTema() {

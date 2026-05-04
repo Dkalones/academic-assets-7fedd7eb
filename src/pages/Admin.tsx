@@ -146,7 +146,7 @@ const Admin = () => {
 
   if (!logged) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-transparent">
         <Header />
         <main className="container py-16 max-w-md">
           <Card className="p-8">
@@ -179,7 +179,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <Header />
       <main className="container py-10 space-y-8">
         <div className="flex items-center justify-between flex-wrap gap-3">
