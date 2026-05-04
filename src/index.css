@@ -87,3 +87,18 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* Translucidez global dos cards/balões — deixa o papel de parede aparecer
+   mas mantém o texto legível com backdrop blur. */
+@layer components {
+  .bg-card {
+    background-color: hsl(var(--card) / 0.85) !important;
+    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+  }
+  /* Header já usa bg-card/80 — reforça o blur */
+  header.sticky {
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+  }
+}
