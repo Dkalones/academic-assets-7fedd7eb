@@ -14,7 +14,7 @@ export const Header = () => {
             <GraduationCap className="h-5 w-5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="text-base font-bold leading-tight">Profa. [Nome]</h1>
+            <h1 className="text-base font-bold leading-tight">Profa. Luana</h1>
             <p className="text-xs text-muted-foreground leading-tight">Materiais didáticos</p>
           </div>
         </Link>
