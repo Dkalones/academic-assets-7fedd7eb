@@ -57,6 +57,7 @@ export function applyTema(tema: Tema) {
   root.style.minHeight = "100vh";
   // Garante que o body não cubra o fundo do html
   document.body.style.background = "transparent";
+}
 
 export function useTema() {
   useEffect(() => {
