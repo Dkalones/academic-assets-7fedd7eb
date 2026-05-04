@@ -43,17 +43,20 @@ export function applyTema(tema: Tema) {
       `linear-gradient(135deg, hsl(${p}) 0%, hsl(${a || p}) 100%)`
     );
   }
-  // Aplica o background tanto no html quanto no body para garantir cobertura total.
-  // Wrappers de página usam bg-transparent (ver Index/Admin) para deixar o fundo aparecer.
+  // Background: aplica APENAS no html, com background-attachment fixed.
+  // Assim a imagem é dimensionada pelo tamanho da viewport (não pela altura do conteúdo),
+  // garantindo que imagens pequenas escalem corretamente para preencher a tela.
+  // O body fica transparente para deixar o fundo aparecer.
   const bg = tema.background || "";
   const isImage = bg.includes("url(");
-  for (const el of [root, document.body]) {
-    el.style.background = bg;
-    el.style.backgroundAttachment = isImage ? "fixed" : "";
-    el.style.backgroundSize = isImage ? "cover" : "";
-    el.style.backgroundRepeat = isImage ? "no-repeat" : "";
-    el.style.backgroundPosition = isImage ? "center" : "";
-  }
+  root.style.background = bg;
+  root.style.backgroundAttachment = isImage ? "fixed" : "";
+  root.style.backgroundSize = isImage ? "cover" : "";
+  root.style.backgroundRepeat = isImage ? "no-repeat" : "";
+  root.style.backgroundPosition = isImage ? "center center" : "";
+  root.style.minHeight = "100vh";
+  // Garante que o body não cubra o fundo do html
+  document.body.style.background = "transparent";
 }
 
 export function useTema() {
