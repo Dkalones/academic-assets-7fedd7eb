@@ -169,32 +169,45 @@ export const TemaEditor = ({ token, tokenOk }: Props) => {
           ))}
         </div>
 
-        <Textarea
-          value={tema.background}
-          onChange={(e) => update({ background: e.target.value })}
-          rows={2}
-          className="font-mono text-xs"
-          placeholder='Ex: #fcfbf8  ou  linear-gradient(135deg, #dbeafe, #f0f9ff)  ou  url("https://...") center/cover no-repeat'
-        />
-
-        <div className="flex gap-2 flex-wrap">
-          <Input
-            value={bgUrl}
-            onChange={(e) => setBgUrl(e.target.value)}
-            placeholder="https://exemplo.com/imagem.jpg"
-            className="flex-1 min-w-[220px]"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => bgUrl && update({ background: `url("${bgUrl}") center/cover no-repeat fixed` })}
-          >
-            Usar imagem
-          </Button>
+        <div className="space-y-2 p-3 rounded-lg border bg-secondary/40">
+          <Label className="text-xs font-semibold">📸 Usar imagem da web como fundo</Label>
+          <div className="flex gap-2 flex-wrap">
+            <Input
+              value={bgUrl}
+              onChange={(e) => setBgUrl(e.target.value)}
+              placeholder="Cole o link da imagem (ex: https://i.ytimg.com/vi/.../hq720.jpg)"
+              className="flex-1 min-w-[220px]"
+            />
+            <Button
+              type="button"
+              onClick={() => {
+                const url = bgUrl.trim();
+                if (!url) return toast.error("Cole o link da imagem primeiro");
+                if (!/^https?:\/\//i.test(url)) return toast.error("Link deve começar com http(s)://");
+                // Escapa parênteses e aspas para não quebrar a sintaxe CSS url(...)
+                const safe = url.replace(/"/g, '\\"');
+                update({ background: `url("${safe}") center/cover no-repeat fixed` });
+                toast.success("Imagem aplicada — clique em Salvar para publicar");
+              }}
+            >
+              Aplicar imagem
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Funciona com qualquer link direto de imagem (.jpg, .png, .webp). Para fotos do Google, abra a imagem em tamanho real, clique direito → "Copiar endereço da imagem".
+          </p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Dica: você também pode enviar uma imagem como material e copiar o link "raw" dela aqui.
-        </p>
+
+        <details className="text-xs">
+          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">CSS avançado (opcional)</summary>
+          <Textarea
+            value={tema.background}
+            onChange={(e) => update({ background: e.target.value })}
+            rows={2}
+            className="font-mono text-xs mt-2"
+            placeholder='Ex: #fcfbf8  ou  linear-gradient(135deg, #dbeafe, #f0f9ff)'
+          />
+        </details>
       </div>
 
       <div className="flex gap-2 pt-2 border-t">
