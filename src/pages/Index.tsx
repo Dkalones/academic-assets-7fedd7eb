@@ -5,7 +5,7 @@ import { BookOpen, Megaphone } from "lucide-react";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       <Header />
 
       <section className="bg-[image:var(--gradient-hero)] text-primary-foreground">
