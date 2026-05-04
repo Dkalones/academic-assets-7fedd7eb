@@ -7,7 +7,9 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
 
   return {
-    base:"/",
+    // Para GitHub Pages em https://USUARIO.github.io/REPOSITORIO/, troque para "/REPOSITORIO/".
+    // Mantenha "./" para funcionar em qualquer subdiretório (recomendado).
+    base: isProd ? "./" : "/",
 
     server: {
       host: "::",
