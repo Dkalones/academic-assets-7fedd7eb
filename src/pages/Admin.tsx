@@ -5,15 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Lock, LogOut, Upload, Trash2, KeyRound, Plus, Loader2, FileText, ShieldCheck,
 } from "lucide-react";
 import { authStore } from "@/lib/auth";
 import {
   GITHUB_CONFIG, listMaterials, uploadMaterial, deleteMaterial,
-  fetchAvisos, saveAvisos, verifyToken, type MaterialItem, type Aviso,
+  fetchAvisos, saveAvisos, verifyToken, fetchDisciplinas,
+  type MaterialItem, type Aviso, type Disciplina,
 } from "@/lib/github";
 import { TemaEditor } from "@/components/TemaEditor";
+import { DisciplinasManager } from "@/components/DisciplinasManager";
 import { toast } from "sonner";
 
 const Admin = () => {
@@ -23,10 +29,14 @@ const Admin = () => {
   const [tokenOk, setTokenOk] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
+  const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
+  const [disciplinaUpload, setDisciplinaUpload] = useState<string>("");
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [avisosSha, setAvisosSha] = useState<string | null>(null);
-  const [novoAviso, setNovoAviso] = useState({ titulo: "", mensagem: "" });
+  const [novoAviso, setNovoAviso] = useState<{ titulo: string; mensagem: string; disciplinaIds: string[] }>({
+    titulo: "", mensagem: "", disciplinaIds: [],
+  });
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -35,8 +45,18 @@ const Admin = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logged]);
 
+  // Recarrega materiais quando muda a disciplina selecionada
+  useEffect(() => {
+    if (!logged) return;
+    listMaterials(disciplinaUpload || undefined).then(setMaterials).catch((e) => toast.error(e.message));
+  }, [disciplinaUpload, logged]);
+
   function refreshAll() {
-    listMaterials().then(setMaterials).catch((e) => toast.error(e.message));
+    fetchDisciplinas().then(({ disciplinas }) => {
+      setDisciplinas(disciplinas);
+      if (disciplinas.length && !disciplinaUpload) setDisciplinaUpload(disciplinas[0].id);
+    });
+    listMaterials(disciplinaUpload || undefined).then(setMaterials).catch((e) => toast.error(e.message));
     fetchAvisos().then(({ avisos, sha }) => { setAvisos(avisos); setAvisosSha(sha); });
   }
 
@@ -81,14 +101,14 @@ const Admin = () => {
     const files = e.target.files;
     if (!files || !files.length) return;
     if (!tokenOk) return toast.error("Verifique o token do GitHub primeiro");
+    if (!disciplinaUpload) return toast.error("Selecione uma disciplina antes de enviar arquivos");
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        await uploadMaterial(token, file);
+        await uploadMaterial(token, file, disciplinaUpload);
         toast.success(`Enviado: ${file.name}`);
       }
-      const updated = await listMaterials();
-      setMaterials(updated);
+      setMaterials(await listMaterials(disciplinaUpload));
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -103,7 +123,7 @@ const Admin = () => {
     try {
       await deleteMaterial(token, item);
       toast.success("Removido");
-      setMaterials(await listMaterials());
+      setMaterials(await listMaterials(disciplinaUpload || undefined));
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -118,13 +138,14 @@ const Admin = () => {
       titulo: novoAviso.titulo.trim(),
       mensagem: novoAviso.mensagem.trim(),
       data: new Date().toLocaleDateString("pt-BR"),
+      disciplinaIds: novoAviso.disciplinaIds.length ? novoAviso.disciplinaIds : undefined,
     };
     const next = [novo, ...avisos];
     try {
       const newSha = await saveAvisos(token, next, avisosSha);
       setAvisos(next);
       setAvisosSha(newSha);
-      setNovoAviso({ titulo: "", mensagem: "" });
+      setNovoAviso({ titulo: "", mensagem: "", disciplinaIds: [] });
       toast.success("Aviso publicado");
     } catch (err: any) {
       toast.error(err.message);
@@ -142,6 +163,19 @@ const Admin = () => {
     } catch (err: any) {
       toast.error(err.message);
     }
+  }
+
+  function toggleDisciplinaAviso(id: string) {
+    setNovoAviso((cur) => ({
+      ...cur,
+      disciplinaIds: cur.disciplinaIds.includes(id)
+        ? cur.disciplinaIds.filter((x) => x !== id)
+        : [...cur.disciplinaIds, id],
+    }));
+  }
+
+  function nomeDisciplina(id?: string) {
+    return disciplinas.find((d) => d.id === id)?.nome ?? id ?? "";
   }
 
   if (!logged) {
@@ -206,7 +240,7 @@ const Admin = () => {
           </div>
           <p className="text-sm text-muted-foreground mb-3">
             Cole um <strong>Personal Access Token (Fine-grained)</strong> com permissão{" "}
-            <em>Contents: Read and write</em> no repositório. Salvo apenas neste navegador (sessionStorage).
+            <em>Contents: Read and write</em> no repositório.
           </p>
           <div className="flex gap-2 flex-wrap">
             <Input
@@ -222,22 +256,52 @@ const Admin = () => {
           </div>
         </Card>
 
+        <DisciplinasManager
+          token={token}
+          tokenOk={tokenOk}
+          onChange={(lista) => {
+            setDisciplinas(lista);
+            if (lista.length && !lista.some((d) => d.id === disciplinaUpload)) {
+              setDisciplinaUpload(lista[0].id);
+            }
+          }}
+        />
+
         <Card className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Upload className="h-5 w-5 text-primary" />
             <h2 className="font-bold">Enviar materiais</h2>
           </div>
+
+          <div className="mb-4 space-y-1">
+            <Label className="text-xs">Disciplina</Label>
+            <Select
+              value={disciplinaUpload}
+              onValueChange={setDisciplinaUpload}
+              disabled={disciplinas.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={disciplinas.length ? "Escolha uma disciplina" : "Crie uma disciplina primeiro"} />
+              </SelectTrigger>
+              <SelectContent>
+                {disciplinas.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>{d.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <label className="block">
             <input
               type="file"
               multiple
               onChange={handleUpload}
-              disabled={!tokenOk || uploading}
+              disabled={!tokenOk || uploading || !disciplinaUpload}
               className="hidden"
               id="file-upload"
             />
             <div className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-[var(--transition-smooth)] ${
-              tokenOk ? "border-primary/40 hover:border-primary hover:bg-secondary/50" : "border-border opacity-60 cursor-not-allowed"
+              tokenOk && disciplinaUpload ? "border-primary/40 hover:border-primary hover:bg-secondary/50" : "border-border opacity-60 cursor-not-allowed"
             }`}>
               {uploading ? (
                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
@@ -245,11 +309,13 @@ const Admin = () => {
                 <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
               )}
               <p className="text-sm font-medium">
-                {tokenOk ? "Clique para selecionar arquivos" : "Verifique o token primeiro"}
+                {!tokenOk ? "Verifique o token primeiro"
+                  : !disciplinaUpload ? "Selecione uma disciplina"
+                  : "Clique para selecionar arquivos"}
               </p>
               <p className="text-xs text-muted-foreground mt-1">PDF, DOCX, imagens, etc.</p>
             </div>
-            {tokenOk && (
+            {tokenOk && disciplinaUpload && (
               <Button asChild variant="outline" size="sm" className="mt-3" disabled={uploading}>
                 <label htmlFor="file-upload" className="cursor-pointer">Selecionar arquivos</label>
               </Button>
@@ -257,7 +323,9 @@ const Admin = () => {
           </label>
 
           <div className="mt-6 space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Materiais publicados ({materials.length})</h3>
+            <h3 className="text-sm font-semibold text-muted-foreground">
+              Materiais publicados {disciplinaUpload && `em "${nomeDisciplina(disciplinaUpload)}"`} ({materials.length})
+            </h3>
             {materials.map((m) => (
               <div key={m.path} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
                 <FileText className="h-4 w-4 text-primary shrink-0" />
@@ -268,7 +336,7 @@ const Admin = () => {
               </div>
             ))}
             {materials.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum arquivo enviado ainda.</p>
+              <p className="text-sm text-muted-foreground">Nenhum arquivo enviado nesta disciplina.</p>
             )}
           </div>
         </Card>
@@ -290,6 +358,29 @@ const Admin = () => {
               value={novoAviso.mensagem}
               onChange={(e) => setNovoAviso({ ...novoAviso, mensagem: e.target.value })}
             />
+            <div className="space-y-2 p-3 rounded-lg border bg-secondary/30">
+              <Label className="text-xs">Mostrar este aviso em quais disciplinas?</Label>
+              {disciplinas.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Crie pelo menos uma disciplina primeiro.</p>
+              ) : (
+                <>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {disciplinas.map((d) => (
+                      <label key={d.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          checked={novoAviso.disciplinaIds.includes(d.id)}
+                          onCheckedChange={() => toggleDisciplinaAviso(d.id)}
+                        />
+                        {d.nome}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Se nenhuma for marcada, o aviso aparece em <strong>todas</strong> as disciplinas.
+                  </p>
+                </>
+              )}
+            </div>
             <Button type="submit" disabled={!tokenOk}>
               <Plus className="h-4 w-4 mr-1.5" /> Publicar aviso
             </Button>
@@ -299,7 +390,13 @@ const Admin = () => {
               <div key={a.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
                 <div className="flex-1">
                   <p className="font-medium text-sm">{a.titulo}</p>
-                  <p className="text-xs text-muted-foreground">{a.data}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {a.data}
+                    {a.disciplinaIds && a.disciplinaIds.length > 0 && (
+                      <> · {a.disciplinaIds.map(nomeDisciplina).join(", ")}</>
+                    )}
+                    {(!a.disciplinaIds || a.disciplinaIds.length === 0) && <> · todas as disciplinas</>}
+                  </p>
                   <p className="text-sm mt-1 whitespace-pre-wrap">{a.mensagem}</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => handleRemoveAviso(a.id)} disabled={!tokenOk}>
