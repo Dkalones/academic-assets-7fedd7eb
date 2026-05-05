@@ -8,28 +8,31 @@ export const ADMIN_PASSWORD = "professora2026";
 const TOKEN_KEY = "gh_pat";
 const AUTH_KEY = "admin_auth";
 
+// Persistência em localStorage para que o login e o token sobrevivam a recargas / fechamentos do navegador.
+const storage = typeof window !== "undefined" ? window.localStorage : null;
+
 export const authStore = {
   isLoggedIn(): boolean {
-    return sessionStorage.getItem(AUTH_KEY) === "1";
+    return storage?.getItem(AUTH_KEY) === "1";
   },
   login(password: string): boolean {
     if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(AUTH_KEY, "1");
+      storage?.setItem(AUTH_KEY, "1");
       return true;
     }
     return false;
   },
   logout() {
-    sessionStorage.removeItem(AUTH_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
+    storage?.removeItem(AUTH_KEY);
+    storage?.removeItem(TOKEN_KEY);
   },
   getToken(): string | null {
-    return sessionStorage.getItem(TOKEN_KEY);
+    return storage?.getItem(TOKEN_KEY) ?? null;
   },
   setToken(token: string) {
-    sessionStorage.setItem(TOKEN_KEY, token);
+    storage?.setItem(TOKEN_KEY, token);
   },
   clearToken() {
-    sessionStorage.removeItem(TOKEN_KEY);
+    storage?.removeItem(TOKEN_KEY);
   },
 };
