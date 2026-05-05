@@ -136,25 +136,45 @@ export async function deleteMaterial(token: string, item: MaterialItem): Promise
   }
 }
 
-export async function saveAvisos(token: string, avisos: Aviso[], sha: string | null): Promise<string> {
-  const { owner, repo, branch, avisosPath } = GITHUB_CONFIG;
-  const content = utf8ToBase64(JSON.stringify(avisos, null, 2));
-  const res = await fetch(`${API}/repos/${owner}/${repo}/contents/${avisosPath}`, {
-    method: "PUT",
-    headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: `Atualiza avisos`,
-      content,
-      branch,
-      sha: sha ?? undefined,
-    }),
-  });
+// Helper genérico: PUT JSON com retry automático em conflito de SHA.
+async function putJsonFile(
+  token: string,
+  path: string,
+  jsonValue: unknown,
+  sha: string | null,
+  message: string,
+): Promise<string> {
+  const { owner, repo, branch } = GITHUB_CONFIG;
+  const url = `${API}/repos/${owner}/${repo}/contents/${path}`;
+
+  const doPut = async (currentSha: string | null) => {
+    const content = utf8ToBase64(JSON.stringify(jsonValue, null, 2));
+    return fetch(url, {
+      method: "PUT",
+      headers: { ...authHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ message, content, branch, sha: currentSha ?? undefined }),
+    });
+  };
+
+  let res = await doPut(sha);
+  // Se conflito de SHA (409) ou SHA inválida (422), refaz o GET pra pegar o sha atual e tenta de novo.
+  if (res.status === 409 || res.status === 422) {
+    const head = await fetch(`${url}?ref=${branch}`, { headers: authHeaders(token) });
+    if (head.ok) {
+      const cur = await head.json();
+      res = await doPut(cur.sha);
+    }
+  }
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Falha ao salvar avisos (${res.status})`);
+    const err = await res.json().catch(() => ({} as any));
+    throw new Error(err.message || `Falha ao salvar ${path} (${res.status})`);
   }
   const data = await res.json();
   return data.content.sha;
+}
+
+export async function saveAvisos(token: string, avisos: Aviso[], sha: string | null): Promise<string> {
+  return putJsonFile(token, GITHUB_CONFIG.avisosPath, avisos, sha, "Atualiza avisos");
 }
 
 export async function verifyToken(token: string): Promise<boolean> {
@@ -163,11 +183,40 @@ export async function verifyToken(token: string): Promise<boolean> {
   return res.ok;
 }
 
+// =============== Disciplinas ===============
+export interface Disciplina {
+  id: string;
+  nome: string;
+  descricao?: string;
+  cor?: string; // CSS color opcional para identificar a aba
+}
+
+export async function fetchDisciplinas(): Promise<{ disciplinas: Disciplina[]; sha: string | null }> {
+  const { owner, repo, branch, disciplinasPath } = GITHUB_CONFIG;
+  const url = `${API}/repos/${owner}/${repo}/contents/${disciplinasPath}?ref=${branch}`;
+  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+  if (res.status === 404) return { disciplinas: [], sha: null };
+  if (!res.ok) return { disciplinas: [], sha: null };
+  const data = await res.json();
+  try {
+    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
+    const parsed = JSON.parse(decoded);
+    return { disciplinas: Array.isArray(parsed) ? parsed : [], sha: data.sha };
+  } catch {
+    return { disciplinas: [], sha: data.sha };
+  }
+}
+
+export async function saveDisciplinas(token: string, disciplinas: Disciplina[], sha: string | null): Promise<string> {
+  return putJsonFile(token, GITHUB_CONFIG.disciplinasPath, disciplinas, sha, "Atualiza disciplinas");
+}
+
+// =============== Tema ===============
 export interface Tema {
-  primary: string;   // HSL: "220 60% 28%"
-  accent: string;    // HSL: "35 75% 55%"
-  background: string; // CSS válido: "#fcfbf8" | "linear-gradient(...)" | "url(...) center/cover"
-  avatarUrl?: string; // URL de imagem do perfil da professora
+  primary: string;
+  accent: string;
+  background: string;
+  avatarUrl?: string;
 }
 
 export const TEMA_PADRAO: Tema = {
@@ -194,22 +243,5 @@ export async function fetchTema(): Promise<{ tema: Tema; sha: string | null }> {
 }
 
 export async function saveTema(token: string, tema: Tema, sha: string | null): Promise<string> {
-  const { owner, repo, branch, temaPath } = GITHUB_CONFIG;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(tema, null, 2))));
-  const res = await fetch(`${API}/repos/${owner}/${repo}/contents/${temaPath}`, {
-    method: "PUT",
-    headers: { ...authHeaders(token), "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: "Atualiza tema do site",
-      content,
-      branch,
-      sha: sha ?? undefined,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `Falha ao salvar tema (${res.status})`);
-  }
-  const data = await res.json();
-  return data.content.sha;
+  return putJsonFile(token, GITHUB_CONFIG.temaPath, tema, sha, "Atualiza tema do site");
 }
