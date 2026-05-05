@@ -11,16 +11,21 @@ function formatSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
-export const MaterialsList = () => {
+interface Props {
+  disciplinaId?: string;
+}
+
+export const MaterialsList = ({ disciplinaId }: Props) => {
   const [items, setItems] = useState<MaterialItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    listMaterials()
+    setLoading(true);
+    listMaterials(disciplinaId)
       .then(setItems)
       .catch((e) => toast.error(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  }, [disciplinaId]);
 
   if (loading) {
     return (

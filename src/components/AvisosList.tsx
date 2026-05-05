@@ -3,7 +3,11 @@ import { Megaphone, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { fetchAvisos, type Aviso } from "@/lib/github";
 
-export const AvisosList = () => {
+interface Props {
+  disciplinaId?: string; // se informado, mostra apenas avisos desta disciplina (ou globais)
+}
+
+export const AvisosList = ({ disciplinaId }: Props) => {
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,6 +17,12 @@ export const AvisosList = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  const visiveis = avisos.filter((a) => {
+    if (!disciplinaId) return true;
+    const ids = a.disciplinaIds ?? [];
+    return ids.length === 0 || ids.includes(disciplinaId);
+  });
+
   if (loading) {
     return (
       <div className="flex items-center text-muted-foreground text-sm">
@@ -21,13 +31,13 @@ export const AvisosList = () => {
     );
   }
 
-  if (avisos.length === 0) {
+  if (visiveis.length === 0) {
     return <p className="text-sm text-muted-foreground">Sem avisos no momento.</p>;
   }
 
   return (
     <div className="space-y-3">
-      {avisos.map((a) => (
+      {visiveis.map((a) => (
         <Card key={a.id} className="p-4 border-l-4 border-l-accent">
           <div className="flex gap-3">
             <Megaphone className="h-5 w-5 text-accent shrink-0 mt-0.5" />
