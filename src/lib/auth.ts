@@ -3,7 +3,7 @@
 // Esta verificação é apenas para esconder a UI — a segurança real vem do token do GitHub,
 // que apenas a professora possui.
 
-export const ADMIN_PASSWORD = "professora2026";
+export const ADMIN_PASSWORD = "TIALUANA";
 
 const TOKEN_KEY = "gh_pat";
 const AUTH_KEY = "admin_auth";
