@@ -166,12 +166,14 @@ export interface Tema {
   primary: string;   // HSL: "220 60% 28%"
   accent: string;    // HSL: "35 75% 55%"
   background: string; // CSS válido: "#fcfbf8" | "linear-gradient(...)" | "url(...) center/cover"
+  avatarUrl?: string; // URL de imagem do perfil da professora
 }
 
 export const TEMA_PADRAO: Tema = {
   primary: "220 60% 28%",
   accent: "35 75% 55%",
   background: "hsl(40 33% 98%)",
+  avatarUrl: "",
 };
 
 export async function fetchTema(): Promise<{ tema: Tema; sha: string | null }> {
