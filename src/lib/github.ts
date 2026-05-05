@@ -29,9 +29,12 @@ export interface MaterialItem {
   sha: string;
 }
 
-export async function listMaterials(): Promise<MaterialItem[]> {
+// Lista materiais. Se disciplinaId for informado, lista de materiais/<disciplinaId>.
+// Sem disciplinaId, lista a raiz (materiais legados, antes do recurso de disciplinas).
+export async function listMaterials(disciplinaId?: string): Promise<MaterialItem[]> {
   const { owner, repo, branch, materialsPath } = GITHUB_CONFIG;
-  const url = `${API}/repos/${owner}/${repo}/contents/${materialsPath}?ref=${branch}`;
+  const path = disciplinaId ? `${materialsPath}/${disciplinaId}` : materialsPath;
+  const url = `${API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
   const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`Erro ao listar materiais (${res.status})`);
@@ -52,6 +55,7 @@ export interface Aviso {
   titulo: string;
   mensagem: string;
   data: string;
+  disciplinaIds?: string[]; // vazio/ausente = aparece para todas
 }
 
 export async function fetchAvisos(): Promise<{ avisos: Aviso[]; sha: string | null }> {
