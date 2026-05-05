@@ -210,6 +210,39 @@ export const TemaEditor = ({ token, tokenOk }: Props) => {
         </details>
       </div>
 
+      <div className="space-y-2 pt-2 border-t">
+        <Label className="flex items-center gap-2">
+          <ImageIcon className="h-4 w-4" /> Foto do perfil (Profa. Luana)
+        </Label>
+        <div className="flex gap-3 items-center">
+          {tema.avatarUrl ? (
+            <img
+              src={tema.avatarUrl}
+              alt="Pré-visualização"
+              className="h-14 w-14 rounded-full object-cover border-2 border-primary/40"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center text-xs text-muted-foreground border">
+              sem foto
+            </div>
+          )}
+          <Input
+            value={tema.avatarUrl ?? ""}
+            onChange={(e) => update({ avatarUrl: e.target.value })}
+            placeholder="Cole o link de uma foto (https://...)"
+            className="flex-1"
+          />
+          {tema.avatarUrl && (
+            <Button type="button" variant="outline" size="sm" onClick={() => update({ avatarUrl: "" })}>
+              Remover
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          A imagem aparece no topo do site no lugar do ícone. Use um link direto (.jpg, .png).
+        </p>
+      </div>
+
       <div className="flex gap-2 pt-2 border-t">
         <Button onClick={handleSave} disabled={!tokenOk || saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
