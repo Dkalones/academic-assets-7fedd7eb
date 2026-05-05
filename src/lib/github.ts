@@ -8,6 +8,7 @@ export const GITHUB_CONFIG = {
   materialsPath: "materiais",
   avisosPath: "data/avisos.json",
   temaPath: "data/tema.json",
+  disciplinasPath: "data/disciplinas.json",
 };
 
 const API = "https://api.github.com";
