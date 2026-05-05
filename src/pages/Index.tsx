@@ -8,12 +8,12 @@ const Index = () => {
     <div className="min-h-screen bg-transparent">
       <Header />
 
-      <section className="bg-[image:var(--gradient-hero)] text-primary-foreground">
+      <section className="hero-translucent text-primary-foreground">
         <div className="container py-16 md:py-20">
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tight max-w-2xl">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight max-w-2xl drop-shadow">
             Materiais e avisos da disciplina
           </h1>
-          <p className="mt-4 text-base md:text-lg opacity-90 max-w-2xl">
+          <p className="mt-4 text-base md:text-lg opacity-95 max-w-2xl drop-shadow">
             Acesse os arquivos compartilhados pela professora e fique por dentro dos avisos da turma.
           </p>
         </div>
