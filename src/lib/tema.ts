@@ -1,11 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { fetchTema, TEMA_PADRAO, type Tema } from "@/lib/github";
+
+// Cache em memória + listeners para o Header reagir ao tema atual.
+let temaAtual: Tema = TEMA_PADRAO;
+const listeners = new Set<(t: Tema) => void>();
+
+export function getTema(): Tema {
+  return temaAtual;
+}
+
+function setTemaAtual(t: Tema) {
+  temaAtual = t;
+  listeners.forEach((fn) => fn(t));
+}
 
 // Converte CSS color (#hex / rgb) para "H S% L%" usado pelos tokens.
 function toHslTriplet(input: string): string | null {
   const m = input.trim().match(/^(\d{1,3})\s+(\d{1,3})%\s+(\d{1,3})%$/);
   if (m) return input.trim();
-  // hex #rgb / #rrggbb
   let hex = input.trim();
   const hexMatch = hex.match(/^#([\da-f]{3}|[\da-f]{6})$/i);
   if (!hexMatch) return null;
@@ -29,6 +41,7 @@ function toHslTriplet(input: string): string | null {
 }
 
 export function applyTema(tema: Tema) {
+  setTemaAtual(tema);
   const root = document.documentElement;
   const p = toHslTriplet(tema.primary);
   const a = toHslTriplet(tema.accent);
@@ -43,10 +56,6 @@ export function applyTema(tema: Tema) {
       `linear-gradient(135deg, hsl(${p}) 0%, hsl(${a || p}) 100%)`
     );
   }
-  // Background: aplica APENAS no html, com background-attachment fixed.
-  // Assim a imagem é dimensionada pelo tamanho da viewport (não pela altura do conteúdo),
-  // garantindo que imagens pequenas escalem corretamente para preencher a tela.
-  // O body fica transparente para deixar o fundo aparecer.
   const bg = tema.background || "";
   const isImage = bg.includes("url(");
   root.style.background = bg;
@@ -55,7 +64,6 @@ export function applyTema(tema: Tema) {
   root.style.backgroundRepeat = isImage ? "no-repeat" : "";
   root.style.backgroundPosition = isImage ? "center center" : "";
   root.style.minHeight = "100vh";
-  // Garante que o body não cubra o fundo do html
   document.body.style.background = "transparent";
 }
 
@@ -63,4 +71,15 @@ export function useTema() {
   useEffect(() => {
     fetchTema().then(({ tema }) => applyTema(tema)).catch(() => applyTema(TEMA_PADRAO));
   }, []);
+}
+
+// Hook para componentes lerem o tema atual reativamente (ex: Header avatar).
+export function useTemaAtual(): Tema {
+  const [t, setT] = useState<Tema>(temaAtual);
+  useEffect(() => {
+    const fn = (next: Tema) => setT(next);
+    listeners.add(fn);
+    return () => { listeners.delete(fn); };
+  }, []);
+  return t;
 }
