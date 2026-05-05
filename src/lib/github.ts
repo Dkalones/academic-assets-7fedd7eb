@@ -89,10 +89,11 @@ function utf8ToBase64(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-export async function uploadMaterial(token: string, file: File): Promise<void> {
+export async function uploadMaterial(token: string, file: File, disciplinaId?: string): Promise<void> {
   const { owner, repo, branch, materialsPath } = GITHUB_CONFIG;
   const safeName = file.name.replace(/[^\w.\-]+/g, "_");
-  const path = `${materialsPath}/${safeName}`;
+  const folder = disciplinaId ? `${materialsPath}/${disciplinaId}` : materialsPath;
+  const path = `${folder}/${safeName}`;
   const buffer = await file.arrayBuffer();
   const content = arrayBufferToBase64(buffer);
 
