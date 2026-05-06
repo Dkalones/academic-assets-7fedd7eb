@@ -1,0 +1,12 @@
+[
+  {
+    "id": "a500bdf6-bb2e-4a7e-a471-0fb3d8c68e75",
+    "titulo": "TESTANDO",
+    "mensagem": "TESTE DE AVISO AMANHA APAGA AUTOMATICAMENTE",
+    "data": "05/05/2026",
+    "validade": "2026-05-06",
+    "disciplinaIds": [
+      "dinamica-das-estruturas"
+    ]
+  }
+]
