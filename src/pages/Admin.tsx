@@ -34,10 +34,11 @@ const Admin = () => {
   const [materials, setMaterials] = useState<MaterialItem[]>([]);
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [avisosSha, setAvisosSha] = useState<string | null>(null);
-  const [novoAviso, setNovoAviso] = useState<{ titulo: string; mensagem: string; disciplinaIds: string[] }>({
-    titulo: "", mensagem: "", disciplinaIds: [],
+  const [novoAviso, setNovoAviso] = useState<{ titulo: string; mensagem: string; disciplinaIds: string[]; validade: string }>({
+    titulo: "", mensagem: "", disciplinaIds: [], validade: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [customName, setCustomName] = useState("");
 
   useEffect(() => {
     if (logged) refreshAll();
@@ -104,11 +105,16 @@ const Admin = () => {
     if (!disciplinaUpload) return toast.error("Selecione uma disciplina antes de enviar arquivos");
     setUploading(true);
     try {
-      for (const file of Array.from(files)) {
-        await uploadMaterial(token, file, disciplinaUpload);
-        toast.success(`Enviado: ${file.name}`);
+      const arr = Array.from(files);
+      for (let i = 0; i < arr.length; i++) {
+        const file = arr[i];
+        // só aplica nome customizado quando há um único arquivo
+        const nameOverride = arr.length === 1 ? customName : "";
+        await uploadMaterial(token, file, disciplinaUpload, nameOverride);
+        toast.success(`Enviado: ${nameOverride || file.name}`);
       }
       setMaterials(await listMaterials(disciplinaUpload));
+      setCustomName("");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -138,6 +144,7 @@ const Admin = () => {
       titulo: novoAviso.titulo.trim(),
       mensagem: novoAviso.mensagem.trim(),
       data: new Date().toLocaleDateString("pt-BR"),
+      validade: novoAviso.validade || undefined,
       disciplinaIds: novoAviso.disciplinaIds.length ? novoAviso.disciplinaIds : undefined,
     };
     const next = [novo, ...avisos];
@@ -145,7 +152,7 @@ const Admin = () => {
       const newSha = await saveAvisos(token, next, avisosSha);
       setAvisos(next);
       setAvisosSha(newSha);
-      setNovoAviso({ titulo: "", mensagem: "", disciplinaIds: [] });
+      setNovoAviso({ titulo: "", mensagem: "", disciplinaIds: [], validade: "" });
       toast.success("Aviso publicado");
     } catch (err: any) {
       toast.error(err.message);
@@ -291,6 +298,17 @@ const Admin = () => {
             </Select>
           </div>
 
+          <div className="mb-4 space-y-1">
+            <Label className="text-xs">Nome personalizado (opcional, apenas para 1 arquivo)</Label>
+            <Input
+              placeholder="Ex.: Lista de exercícios — capítulo 3"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              disabled={!disciplinaUpload}
+            />
+            <p className="text-xs text-muted-foreground">Se vazio, o nome original do arquivo será usado.</p>
+          </div>
+
           <label className="block">
             <input
               type="file"
@@ -358,6 +376,15 @@ const Admin = () => {
               value={novoAviso.mensagem}
               onChange={(e) => setNovoAviso({ ...novoAviso, mensagem: e.target.value })}
             />
+            <div className="space-y-1">
+              <Label className="text-xs">Data de validade (opcional)</Label>
+              <Input
+                type="date"
+                value={novoAviso.validade}
+                onChange={(e) => setNovoAviso({ ...novoAviso, validade: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">Após esta data o aviso some automaticamente da página dos alunos.</p>
+            </div>
             <div className="space-y-2 p-3 rounded-lg border bg-secondary/30">
               <Label className="text-xs">Mostrar este aviso em quais disciplinas?</Label>
               {disciplinas.length === 0 ? (

@@ -55,6 +55,7 @@ export interface Aviso {
   titulo: string;
   mensagem: string;
   data: string;
+  validade?: string; // ISO yyyy-mm-dd; depois desta data o aviso some da listagem pública
   disciplinaIds?: string[]; // vazio/ausente = aparece para todas
 }
 
@@ -89,9 +90,15 @@ function utf8ToBase64(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-export async function uploadMaterial(token: string, file: File, disciplinaId?: string): Promise<void> {
+export async function uploadMaterial(token: string, file: File, disciplinaId?: string, customName?: string): Promise<void> {
   const { owner, repo, branch, materialsPath } = GITHUB_CONFIG;
-  const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+  const originalName = file.name;
+  const lastDot = originalName.lastIndexOf(".");
+  const ext = lastDot > 0 ? originalName.slice(lastDot) : "";
+  const baseRaw = customName && customName.trim()
+    ? (customName.trim().toLowerCase().endsWith(ext.toLowerCase()) ? customName.trim() : customName.trim() + ext)
+    : originalName;
+  const safeName = baseRaw.replace(/[^\w.\-]+/g, "_");
   const folder = disciplinaId ? `${materialsPath}/${disciplinaId}` : materialsPath;
   const path = `${folder}/${safeName}`;
   const buffer = await file.arrayBuffer();

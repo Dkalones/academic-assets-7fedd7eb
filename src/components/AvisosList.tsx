@@ -17,7 +17,13 @@ export const AvisosList = ({ disciplinaId }: Props) => {
       .finally(() => setLoading(false));
   }, []);
 
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
   const visiveis = avisos.filter((a) => {
+    if (a.validade) {
+      const v = new Date(a.validade + "T23:59:59");
+      if (v < hoje) return false;
+    }
     if (!disciplinaId) return true;
     const ids = a.disciplinaIds ?? [];
     return ids.length === 0 || ids.includes(disciplinaId);
