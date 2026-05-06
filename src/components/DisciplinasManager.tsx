@@ -138,13 +138,13 @@ export const DisciplinasManager = ({ token, tokenOk, onChange }: Props) => {
               />
               <p className="text-xs text-muted-foreground">id: <code>{d.id}</code></p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => handleRemove(d.id)} disabled={!tokenOk}>
+            <Button variant="ghost" size="sm" onClick={() => handleRemove(d.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>
         ))}
         {lista.length > 0 && (
-          <Button onClick={handleSaveEdits} disabled={!tokenOk || saving} variant="outline" size="sm">
+          <Button onClick={handleSaveEdits} disabled={saving} variant="outline" size="sm">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             Salvar edições
           </Button>
