@@ -1,6 +1,6 @@
 {
-  "primary": "305 71% 74%",
-  "accent": "279 89% 64%",
-  "background": "url(\"https://i.pinimg.com/736x/c6/dc/f1/c6dcf1acc4376d08d581b5eff5fde6be.jpg\") center/cover no-repeat fixed",
-  "avatarUrl": "https://media-gru1-1.cdn.whatsapp.net/v/t61.24694-24/491878496_746376074743337_1257378495426365090_n.jpg?ccb=11-4&oh=01_Q5Aa4QGlUD76aADVzCHXFrgQxNkOTKybg30IBoxTEa4YgK8eJQ&oe=69FF8B58&_nc_sid=5e03e0&_nc_cat=105"
+  "primary": "220 60% 28%",
+  "accent": "35 75% 55%",
+  "background": "linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%)",
+  "avatarUrl": ""
 }
