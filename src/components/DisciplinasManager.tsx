@@ -109,9 +109,12 @@ export const DisciplinasManager = ({ token, tokenOk, onChange }: Props) => {
             />
           </div>
         </div>
-        <Button type="submit" disabled={!tokenOk || saving}>
+        <Button type="submit" disabled={saving}>
           <Plus className="h-4 w-4 mr-1.5" /> Criar disciplina
         </Button>
+        {!tokenOk && (
+          <p className="text-xs text-destructive">⚠️ Verifique o Token do GitHub no topo para salvar.</p>
+        )}
       </form>
 
       <div className="space-y-2">
