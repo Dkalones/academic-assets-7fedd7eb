@@ -109,9 +109,12 @@ export const DisciplinasManager = ({ token, tokenOk, onChange }: Props) => {
             />
           </div>
         </div>
-        <Button type="submit" disabled={!tokenOk || saving}>
+        <Button type="submit" disabled={saving}>
           <Plus className="h-4 w-4 mr-1.5" /> Criar disciplina
         </Button>
+        {!tokenOk && (
+          <p className="text-xs text-destructive">⚠️ Verifique o Token do GitHub no topo para salvar.</p>
+        )}
       </form>
 
       <div className="space-y-2">
@@ -135,13 +138,13 @@ export const DisciplinasManager = ({ token, tokenOk, onChange }: Props) => {
               />
               <p className="text-xs text-muted-foreground">id: <code>{d.id}</code></p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => handleRemove(d.id)} disabled={!tokenOk}>
+            <Button variant="ghost" size="sm" onClick={() => handleRemove(d.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>
         ))}
         {lista.length > 0 && (
-          <Button onClick={handleSaveEdits} disabled={!tokenOk || saving} variant="outline" size="sm">
+          <Button onClick={handleSaveEdits} disabled={saving} variant="outline" size="sm">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             Salvar edições
           </Button>

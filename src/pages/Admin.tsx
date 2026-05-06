@@ -408,9 +408,12 @@ const Admin = () => {
                 </>
               )}
             </div>
-            <Button type="submit" disabled={!tokenOk}>
+            <Button type="submit">
               <Plus className="h-4 w-4 mr-1.5" /> Publicar aviso
             </Button>
+            {!tokenOk && (
+              <p className="text-xs text-destructive">⚠️ Verifique o Token do GitHub no topo para publicar.</p>
+            )}
           </form>
           <div className="space-y-2">
             {avisos.map((a) => (

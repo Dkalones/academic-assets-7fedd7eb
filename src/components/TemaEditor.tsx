@@ -243,8 +243,13 @@ export const TemaEditor = ({ token, tokenOk }: Props) => {
         </p>
       </div>
 
+      {!tokenOk && (
+        <p className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-md p-2">
+          ⚠️ Verifique o <strong>Token do GitHub</strong> no topo da página antes de salvar.
+        </p>
+      )}
       <div className="flex gap-2 pt-2 border-t">
-        <Button onClick={handleSave} disabled={!tokenOk || saving}>
+        <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
           Salvar tema
         </Button>
