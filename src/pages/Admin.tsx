@@ -298,6 +298,17 @@ const Admin = () => {
             </Select>
           </div>
 
+          <div className="mb-4 space-y-1">
+            <Label className="text-xs">Nome personalizado (opcional, apenas para 1 arquivo)</Label>
+            <Input
+              placeholder="Ex.: Lista de exercícios — capítulo 3"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              disabled={!disciplinaUpload}
+            />
+            <p className="text-xs text-muted-foreground">Se vazio, o nome original do arquivo será usado.</p>
+          </div>
+
           <label className="block">
             <input
               type="file"
@@ -365,6 +376,15 @@ const Admin = () => {
               value={novoAviso.mensagem}
               onChange={(e) => setNovoAviso({ ...novoAviso, mensagem: e.target.value })}
             />
+            <div className="space-y-1">
+              <Label className="text-xs">Data de validade (opcional)</Label>
+              <Input
+                type="date"
+                value={novoAviso.validade}
+                onChange={(e) => setNovoAviso({ ...novoAviso, validade: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">Após esta data o aviso some automaticamente da página dos alunos.</p>
+            </div>
             <div className="space-y-2 p-3 rounded-lg border bg-secondary/30">
               <Label className="text-xs">Mostrar este aviso em quais disciplinas?</Label>
               {disciplinas.length === 0 ? (
