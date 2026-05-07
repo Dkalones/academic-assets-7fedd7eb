@@ -169,13 +169,17 @@ async function putJsonFile(
   };
 
   let res = await doPut(sha);
-  // Se conflito de SHA (409) ou SHA inválida (422), refaz o GET pra pegar o sha atual e tenta de novo.
-  if (res.status === 409 || res.status === 422) {
-    const head = await fetch(`${url}?ref=${branch}`, { headers: authHeaders(token) });
-    if (head.ok) {
-      const cur = await head.json();
-      res = await doPut(cur.sha);
-    }
+  // Em caso de conflito/SHA ausente, refaz o GET com cache-busting até 3 vezes
+  // (a API de contents pode devolver SHA desatualizada por causa do CDN).
+  for (let attempt = 0; attempt < 3 && (res.status === 409 || res.status === 422); attempt++) {
+    await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+    const head = await fetch(`${url}?ref=${branch}&t=${Date.now()}`, {
+      headers: { ...authHeaders(token), "Cache-Control": "no-cache" },
+      cache: "no-store",
+    });
+    if (!head.ok) break;
+    const cur = await head.json();
+    res = await doPut(cur.sha);
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({} as any));
