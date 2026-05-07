@@ -13,6 +13,16 @@ export const GITHUB_CONFIG = {
 
 const API = "https://api.github.com";
 
+// Lê um arquivo via raw.githubusercontent.com (sem cache da API + cache-busting).
+// Muito mais rápido que a API /contents, que tem CDN agressivo (~60s).
+async function fetchRawJson<T>(path: string): Promise<T | null> {
+  const { owner, repo, branch } = GITHUB_CONFIG;
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}?t=${Date.now()}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) return null;
+  try { return (await res.json()) as T; } catch { return null; }
+}
+
 function authHeaders(token: string) {
   return {
     Authorization: `Bearer ${token}`,
@@ -34,8 +44,8 @@ export interface MaterialItem {
 export async function listMaterials(disciplinaId?: string): Promise<MaterialItem[]> {
   const { owner, repo, branch, materialsPath } = GITHUB_CONFIG;
   const path = disciplinaId ? `${materialsPath}/${disciplinaId}` : materialsPath;
-  const url = `${API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+  const url = `${API}/repos/${owner}/${repo}/contents/${path}?ref=${branch}&t=${Date.now()}`;
+  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" }, cache: "no-store" });
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`Erro ao listar materiais (${res.status})`);
   const data = await res.json();
@@ -60,19 +70,9 @@ export interface Aviso {
 }
 
 export async function fetchAvisos(): Promise<{ avisos: Aviso[]; sha: string | null }> {
-  const { owner, repo, branch, avisosPath } = GITHUB_CONFIG;
-  const url = `${API}/repos/${owner}/${repo}/contents/${avisosPath}?ref=${branch}`;
-  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
-  if (res.status === 404) return { avisos: [], sha: null };
-  if (!res.ok) throw new Error(`Erro ao buscar avisos (${res.status})`);
-  const data = await res.json();
-  try {
-    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-    const parsed = JSON.parse(decoded);
-    return { avisos: Array.isArray(parsed) ? parsed : [], sha: data.sha };
-  } catch {
-    return { avisos: [], sha: data.sha };
-  }
+  // Leitura rápida via raw (cache-busting). SHA não é necessário aqui — putJsonFile resolve sozinho ao salvar.
+  const data = await fetchRawJson<Aviso[]>(GITHUB_CONFIG.avisosPath);
+  return { avisos: Array.isArray(data) ? data : [], sha: null };
 }
 
 // Converte ArrayBuffer em base64 (compatível com arquivos grandes)
@@ -204,19 +204,8 @@ export interface Disciplina {
 }
 
 export async function fetchDisciplinas(): Promise<{ disciplinas: Disciplina[]; sha: string | null }> {
-  const { owner, repo, branch, disciplinasPath } = GITHUB_CONFIG;
-  const url = `${API}/repos/${owner}/${repo}/contents/${disciplinasPath}?ref=${branch}`;
-  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
-  if (res.status === 404) return { disciplinas: [], sha: null };
-  if (!res.ok) return { disciplinas: [], sha: null };
-  const data = await res.json();
-  try {
-    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-    const parsed = JSON.parse(decoded);
-    return { disciplinas: Array.isArray(parsed) ? parsed : [], sha: data.sha };
-  } catch {
-    return { disciplinas: [], sha: data.sha };
-  }
+  const data = await fetchRawJson<Disciplina[]>(GITHUB_CONFIG.disciplinasPath);
+  return { disciplinas: Array.isArray(data) ? data : [], sha: null };
 }
 
 export async function saveDisciplinas(token: string, disciplinas: Disciplina[], sha: string | null): Promise<string> {
@@ -239,19 +228,8 @@ export const TEMA_PADRAO: Tema = {
 };
 
 export async function fetchTema(): Promise<{ tema: Tema; sha: string | null }> {
-  const { owner, repo, branch, temaPath } = GITHUB_CONFIG;
-  const url = `${API}/repos/${owner}/${repo}/contents/${temaPath}?ref=${branch}`;
-  const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
-  if (res.status === 404) return { tema: TEMA_PADRAO, sha: null };
-  if (!res.ok) return { tema: TEMA_PADRAO, sha: null };
-  const data = await res.json();
-  try {
-    const decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
-    const parsed = JSON.parse(decoded);
-    return { tema: { ...TEMA_PADRAO, ...parsed }, sha: data.sha };
-  } catch {
-    return { tema: TEMA_PADRAO, sha: data.sha };
-  }
+  const data = await fetchRawJson<Partial<Tema>>(GITHUB_CONFIG.temaPath);
+  return { tema: data ? { ...TEMA_PADRAO, ...data } : TEMA_PADRAO, sha: null };
 }
 
 export async function saveTema(token: string, tema: Tema, sha: string | null): Promise<string> {
