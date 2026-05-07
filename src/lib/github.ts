@@ -174,7 +174,7 @@ async function putJsonFile(
   for (let attempt = 0; attempt < 3 && (res.status === 409 || res.status === 422); attempt++) {
     await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
     const head = await fetch(`${url}?ref=${branch}&t=${Date.now()}`, {
-      headers: { ...authHeaders(token), "Cache-Control": "no-cache" },
+      headers: authHeaders(token),
       cache: "no-store",
     });
     if (!head.ok) break;
