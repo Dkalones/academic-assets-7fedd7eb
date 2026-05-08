@@ -204,41 +204,13 @@ const Admin = () => {
           <div>
             <h1 className="text-2xl font-bold">Painel administrativo</h1>
             <p className="text-sm text-muted-foreground">
-              Repositório: <code className="font-mono">{GITHUB_CONFIG.owner}/{GITHUB_CONFIG.repo}</code>
+              Armazenamento: <code className="font-mono">Vercel Blob</code>
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-1.5" /> Sair
           </Button>
         </div>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <KeyRound className="h-5 w-5 text-primary" />
-            <h2 className="font-bold">Token do GitHub</h2>
-            {tokenOk && (
-              <span className="ml-auto inline-flex items-center text-xs text-success font-medium">
-                <ShieldCheck className="h-4 w-4 mr-1" /> Verificado
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mb-3">
-            Cole um <strong>Personal Access Token (Fine-grained)</strong> com permissão{" "}
-            <em>Contents: Read and write</em> no repositório.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <Input
-              type="password"
-              placeholder="ghp_..."
-              value={token}
-              onChange={(e) => { setToken(e.target.value); setTokenOk(false); }}
-              className="flex-1 min-w-[240px] font-mono text-sm"
-            />
-            <Button onClick={() => handleVerifyToken(token)} disabled={!token || verifying}>
-              {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar"}
-            </Button>
-          </div>
-        </Card>
 
         <DisciplinasManager
           token={token}
