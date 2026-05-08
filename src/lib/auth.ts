@@ -1,14 +1,12 @@
 // Autenticação simples no frontend.
-// IMPORTANTE: troque ADMIN_PASSWORD pela senha desejada antes de publicar.
-// Esta verificação é apenas para esconder a UI — a segurança real vem do token do GitHub,
-// que apenas a professora possui.
+// A MESMA senha é enviada para /api/blob nas operações de escrita
+// (definida em ADMIN_PASSWORD na Vercel).
 
 export const ADMIN_PASSWORD = "TIALUANA";
 
-const TOKEN_KEY = "gh_pat";
 const AUTH_KEY = "admin_auth";
+const PWD_KEY = "admin_pwd";
 
-// Persistência em localStorage para que o login e o token sobrevivam a recargas / fechamentos do navegador.
 const storage = typeof window !== "undefined" ? window.localStorage : null;
 
 export const authStore = {
@@ -18,21 +16,24 @@ export const authStore = {
   login(password: string): boolean {
     if (password === ADMIN_PASSWORD) {
       storage?.setItem(AUTH_KEY, "1");
+      storage?.setItem(PWD_KEY, password);
       return true;
     }
     return false;
   },
   logout() {
     storage?.removeItem(AUTH_KEY);
-    storage?.removeItem(TOKEN_KEY);
+    storage?.removeItem(PWD_KEY);
   },
+  // Mantido para compatibilidade — agora retorna a própria senha admin,
+  // que é o credencial enviado para /api/blob.
   getToken(): string | null {
-    return storage?.getItem(TOKEN_KEY) ?? null;
+    return storage?.getItem(PWD_KEY) ?? null;
   },
-  setToken(token: string) {
-    storage?.setItem(TOKEN_KEY, token);
+  setToken(_token: string) {
+    // no-op: a senha já é guardada no login.
   },
   clearToken() {
-    storage?.removeItem(TOKEN_KEY);
+    storage?.removeItem(PWD_KEY);
   },
 };
