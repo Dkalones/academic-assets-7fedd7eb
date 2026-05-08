@@ -10,14 +10,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Lock, LogOut, Upload, Trash2, KeyRound, Plus, Loader2, FileText, ShieldCheck,
+  Lock, LogOut, Upload, Trash2, Plus, Loader2, FileText,
 } from "lucide-react";
 import { authStore } from "@/lib/auth";
 import {
-  GITHUB_CONFIG, listMaterials, uploadMaterial, deleteMaterial,
-  fetchAvisos, saveAvisos, verifyToken, fetchDisciplinas,
+  listMaterials, uploadMaterial, deleteMaterial,
+  fetchAvisos, saveAvisos, fetchDisciplinas,
   type MaterialItem, type Aviso, type Disciplina,
-} from "@/lib/github";
+} from "@/lib/api";
 import { TemaEditor } from "@/components/TemaEditor";
 import { DisciplinasManager } from "@/components/DisciplinasManager";
 import { toast } from "sonner";
@@ -25,9 +25,9 @@ import { toast } from "sonner";
 const Admin = () => {
   const [logged, setLogged] = useState(authStore.isLoggedIn());
   const [password, setPassword] = useState("");
-  const [token, setToken] = useState(authStore.getToken() ?? "");
-  const [tokenOk, setTokenOk] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  // "token" agora é a própria senha admin enviada para /api/blob.
+  const token = authStore.getToken() ?? "";
+  const tokenOk = logged;
 
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [disciplinaUpload, setDisciplinaUpload] = useState<string>("");
@@ -42,7 +42,6 @@ const Admin = () => {
 
   useEffect(() => {
     if (logged) refreshAll();
-    if (logged && token) handleVerifyToken(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [logged]);
 
@@ -75,33 +74,11 @@ const Admin = () => {
   function handleLogout() {
     authStore.logout();
     setLogged(false);
-    setToken("");
-    setTokenOk(false);
-  }
-
-  async function handleVerifyToken(t: string) {
-    setVerifying(true);
-    try {
-      const ok = await verifyToken(t);
-      setTokenOk(ok);
-      if (ok) {
-        authStore.setToken(t);
-        toast.success("Token válido");
-      } else {
-        toast.error("Token inválido ou sem acesso ao repositório");
-      }
-    } catch {
-      setTokenOk(false);
-      toast.error("Falha ao verificar token");
-    } finally {
-      setVerifying(false);
-    }
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || !files.length) return;
-    if (!tokenOk) return toast.error("Verifique o token do GitHub primeiro");
     if (!disciplinaUpload) return toast.error("Selecione uma disciplina antes de enviar arquivos");
     setUploading(true);
     try {
@@ -227,41 +204,13 @@ const Admin = () => {
           <div>
             <h1 className="text-2xl font-bold">Painel administrativo</h1>
             <p className="text-sm text-muted-foreground">
-              Repositório: <code className="font-mono">{GITHUB_CONFIG.owner}/{GITHUB_CONFIG.repo}</code>
+              Armazenamento: <code className="font-mono">Vercel Blob</code>
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-1.5" /> Sair
           </Button>
         </div>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <KeyRound className="h-5 w-5 text-primary" />
-            <h2 className="font-bold">Token do GitHub</h2>
-            {tokenOk && (
-              <span className="ml-auto inline-flex items-center text-xs text-success font-medium">
-                <ShieldCheck className="h-4 w-4 mr-1" /> Verificado
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground mb-3">
-            Cole um <strong>Personal Access Token (Fine-grained)</strong> com permissão{" "}
-            <em>Contents: Read and write</em> no repositório.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <Input
-              type="password"
-              placeholder="ghp_..."
-              value={token}
-              onChange={(e) => { setToken(e.target.value); setTokenOk(false); }}
-              className="flex-1 min-w-[240px] font-mono text-sm"
-            />
-            <Button onClick={() => handleVerifyToken(token)} disabled={!token || verifying}>
-              {verifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verificar"}
-            </Button>
-          </div>
-        </Card>
 
         <DisciplinasManager
           token={token}

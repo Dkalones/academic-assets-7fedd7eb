@@ -4,12 +4,9 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => {
-  const isProd = mode === "production";
-
   return {
-    // Para GitHub Pages em https://USUARIO.github.io/REPOSITORIO/, troque para "/REPOSITORIO/".
-    // Mantenha "./" para funcionar em qualquer subdiretório (recomendado).
-    base: isProd ? "./" : "/",
+    // Vercel serve o app a partir da raiz do domínio.
+    base: "/",
 
     server: {
       host: "::",
