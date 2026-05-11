@@ -102,7 +102,7 @@ const Index = () => {
       </main>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} — Site acadêmico hospedado no GitHub Pages
+        © {new Date().getFullYear()} — made by João D
       </footer>
     </div>
   );
